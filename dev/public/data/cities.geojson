@@ -1,0 +1,25 @@
+{
+"type": "FeatureCollection",
+"name": "cities",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "NAME": "BLAINE", "NAME2": "Blaine" }, "geometry": { "type": "Point", "coordinates": [ -82.843222, 38.027596 ] } },
+{ "type": "Feature", "properties": { "NAME": "ELKHORN CITY", "NAME2": "Elkhorn City" }, "geometry": { "type": "Point", "coordinates": [ -82.350983, 37.304004 ] } },
+{ "type": "Feature", "properties": { "NAME": "HINDMAN", "NAME2": "Hindman" }, "geometry": { "type": "Point", "coordinates": [ -82.980445, 37.335939 ] } },
+{ "type": "Feature", "properties": { "NAME": "INEZ", "NAME2": "Inez" }, "geometry": { "type": "Point", "coordinates": [ -82.538767, 37.866491 ] } },
+{ "type": "Feature", "properties": { "NAME": "JENKINS", "NAME2": "Jenkins" }, "geometry": { "type": "Point", "coordinates": [ -82.630993, 37.173444 ] } },
+{ "type": "Feature", "properties": { "NAME": "LOUISA", "NAME2": "Louisa" }, "geometry": { "type": "Point", "coordinates": [ -82.603216, 38.114262 ] } },
+{ "type": "Feature", "properties": { "NAME": "MARTIN", "NAME2": "Martin" }, "geometry": { "type": "Point", "coordinates": [ -82.752663, 37.572884 ] } },
+{ "type": "Feature", "properties": { "NAME": "PAINTSVILLE", "NAME2": "Paintsville" }, "geometry": { "type": "Point", "coordinates": [ -82.807109, 37.814546 ] } },
+{ "type": "Feature", "properties": { "NAME": "PIKEVILLE", "NAME2": "Pikeville" }, "geometry": { "type": "Point", "coordinates": [ -82.518767, 37.479274 ] } },
+{ "type": "Feature", "properties": { "NAME": "PRESTONSBURG", "NAME2": "Prestonsburg" }, "geometry": { "type": "Point", "coordinates": [ -82.771553, 37.66566 ] } },
+{ "type": "Feature", "properties": { "NAME": "WARFIELD", "NAME2": "Warfield" }, "geometry": { "type": "Point", "coordinates": [ -82.417373, 37.84427 ] } },
+{ "type": "Feature", "properties": { "NAME": "WAYLAND", "NAME2": "Wayland" }, "geometry": { "type": "Point", "coordinates": [ -82.805164, 37.445107 ] } },
+{ "type": "Feature", "properties": { "NAME": "WHEELWRIGHT", "NAME2": "Wheelwright" }, "geometry": { "type": "Point", "coordinates": [ -82.720994, 37.33261 ] } },
+{ "type": "Feature", "properties": { "NAME": "WHITESBURG", "NAME2": "Whitesburg" }, "geometry": { "type": "Point", "coordinates": [ -82.82683, 37.118439 ] } },
+{ "type": "Feature", "properties": { "NAME": "ALLEN", "NAME2": "Allen" }, "geometry": { "type": "Point", "coordinates": [ -82.729882, 37.611208 ] } },
+{ "type": "Feature", "properties": { "NAME": "PIPPA PASSES", "NAME2": "Pippa Passes" }, "geometry": { "type": "Point", "coordinates": [ -82.874422, 37.334887 ] } },
+{ "type": "Feature", "properties": { "NAME": "FLEMING-NEON", "NAME2": "Fleming-Neon" }, "geometry": { "type": "Point", "coordinates": [ -82.709968, 37.191905 ] } },
+{ "type": "Feature", "properties": { "NAME": "COAL RUN VILLAGE", "NAME2": "Coal Run Village" }, "geometry": { "type": "Point", "coordinates": [ -82.556024, 37.513751 ] } }
+]
+}

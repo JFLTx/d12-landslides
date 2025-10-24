@@ -1,0 +1,349 @@
+@import "tailwindcss";
+
+/* 100 Thin */
+@font-face {
+  font-family: "Montserrat";
+  src: url("https://jfltx.github.io/fonts/Montserrat/montserrat-v31-latin-100.woff2")
+    format("woff2");
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Montserrat";
+  src: url("https://jfltx.github.io/fonts/Montserrat/montserrat-v31-latin-100italic.woff2")
+    format("woff2");
+  font-weight: 100;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* 200 ExtraLight */
+@font-face {
+  font-family: "Montserrat";
+  src: url("https://jfltx.github.io/fonts/Montserrat/montserrat-v31-latin-200.woff2")
+    format("woff2");
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Montserrat";
+  src: url("https://jfltx.github.io/fonts/Montserrat/montserrat-v31-latin-200italic.woff2")
+    format("woff2");
+  font-weight: 200;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* 300 Light */
+@font-face {
+  font-family: "Montserrat";
+  src: url("https://jfltx.github.io/fonts/Montserrat/montserrat-v31-latin-300.woff2")
+    format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Montserrat";
+  src: url("https://jfltx.github.io/fonts/Montserrat/montserrat-v31-latin-300italic.woff2")
+    format("woff2");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* 400 Regular */
+@font-face {
+  font-family: "Montserrat";
+  src: url("https://jfltx.github.io/fonts/Montserrat/montserrat-v31-latin-regular.woff2")
+    format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Montserrat";
+  src: url("https://jfltx.github.io/fonts/Montserrat/montserrat-v31-latin-italic.woff2")
+    format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* 500 Medium */
+@font-face {
+  font-family: "Montserrat";
+  src: url("https://jfltx.github.io/fonts/Montserrat/montserrat-v31-latin-500.woff2")
+    format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Montserrat";
+  src: url("https://jfltx.github.io/fonts/Montserrat/montserrat-v31-latin-500italic.woff2")
+    format("woff2");
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* 600 SemiBold */
+@font-face {
+  font-family: "Montserrat";
+  src: url("https://jfltx.github.io/fonts/Montserrat/montserrat-v31-latin-600.woff2")
+    format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Montserrat";
+  src: url("https://jfltx.github.io/fonts/Montserrat/montserrat-v31-latin-600italic.woff2")
+    format("woff2");
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* 700 Bold */
+@font-face {
+  font-family: "Montserrat";
+  src: url("https://jfltx.github.io/fonts/Montserrat/montserrat-v31-latin-700.woff2")
+    format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Montserrat";
+  src: url("https://jfltx.github.io/fonts/Montserrat/montserrat-v31-latin-700italic.woff2")
+    format("woff2");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* 800 ExtraBold */
+@font-face {
+  font-family: "Montserrat";
+  src: url("https://jfltx.github.io/fonts/Montserrat/montserrat-v31-latin-800.woff2")
+    format("woff2");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Montserrat";
+  src: url("https://jfltx.github.io/fonts/Montserrat/montserrat-v31-latin-800italic.woff2")
+    format("woff2");
+  font-weight: 800;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* 900 Black */
+@font-face {
+  font-family: "Montserrat";
+  src: url("https://jfltx.github.io/fonts/Montserrat/montserrat-v31-latin-900.woff2")
+    format("woff2");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Montserrat";
+  src: url("https://jfltx.github.io/fonts/Montserrat/montserrat-v31-latin-900italic.woff2")
+    format("woff2");
+  font-weight: 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Global usage */
+:root {
+  --font: "Montserrat", system-ui, sans-serif;
+  --h1-weight: 900;
+  --dark: #111;
+}
+
+h1 {
+  position: absolute;
+  z-index: 650;
+  top: 10px;
+  left: 15px;
+  padding: 0px 4px;
+  margin: 0;
+  font-family: var(--font);
+  font-weight: var(--h1-weight);
+  font-size: 3em;
+  letter-spacing: 0.05em;
+  color: whitesmoke;
+  text-shadow: 0 0 2px var(--dark), 0 0 5px var(--dark), 0 0 7px var(--dark),
+    0 0 10px var(--dark);
+}
+
+.legend {
+  position: absolute;
+  bottom: 45px;
+  left: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-family: var(--font);
+  font-size: 0.8em;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  max-width: min(70vw, 320px);
+  max-height: 45vh;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.legend_title {
+  font-weight: 700;
+  margin: 0 0 6px 0;
+  font-size: 1em;
+}
+.legend_list {
+}
+
+.legend_item {
+  display: flex;
+  align-items: center;
+  margin: 3px 0;
+  break-inside: avoid; /* helps if we use CSS columns on mobile */
+}
+
+.legend_body svg {
+  display: block;
+}
+.legend_body text {
+  dominant-baseline: middle;
+}
+
+/* legend layout */
+.legend_body {
+  position: relative;
+}
+
+.legend_box {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+/* legend layout shell */
+.legend_body {
+  position: relative;
+}
+
+.legend_box {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+/* concentric bubbles area */
+.legend_bubbles {
+  /* JS sets --maxD and --color */
+  --maxD: 120px;
+  --color: #888;
+  position: relative;
+  width: var(--maxD);
+  height: var(--maxD);
+}
+
+/* each bubble: bottom-center anchored */
+.legend_bubbles .b {
+  position: absolute;
+  bottom: 0; /* share the same baseline */
+  left: 50%; /* share the same horizontal center */
+  transform: translateX(-50%);
+  border-radius: 50%;
+  border: 1px solid #222;
+  background: var(--color);
+  opacity: 0.95;
+}
+
+/* labels + ticks to the right */
+.legend_labels {
+  position: relative;
+  min-width: 160px;
+}
+.legend_labels .tick {
+  position: absolute;
+  left: 0;
+  width: 24px; /* leader length */
+  height: 1px;
+  background: #222;
+}
+.legend_labels .lbl {
+  position: absolute;
+  left: 30px; /* label start (after leader) */
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+  transform: translateY(-50%); /* vertical centering on the tick line */
+}
+
+/* add styles globally to project */
+body {
+  font-family: var(--font);
+}
+
+.maplibregl-popup {
+  max-width: 600px !important;
+}
+
+/* MapLibre GL JS Popup styles using root font */
+.maplibregl-popup-content,
+body {
+  font-family: var(--font);
+  font-size: 0.9rem;
+  @apply text-gray-800;
+}
+
+/* Popup content container styles */
+.maplibregl-popup-content {
+  @apply rounded-lg shadow-lg;
+}
+
+/* Small devices (portrait phones, 576px and below) */
+@media (max-width: 576px) and (orientation: portrait) {
+  h1 {
+    display: none;
+  }
+
+  .legend {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    bottom: auto;
+    right: auto;
+
+    font-size: 0.7em;
+    max-width: 86vw;
+    max-height: 40vh;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .legend_list {
+    column-count: 2;
+    column-gap: 1px;
+  }
+  .legend_item {
+    break-inside: avoid;
+  }
+
+  .maplibregl-popup {
+    max-width: min(92vw, 520px) !important;
+  }
+}
+
+@media (max-width: 350px) {
+  .legend_list {
+    column-count: 1;
+  }
+}

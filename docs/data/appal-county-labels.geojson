@@ -1,0 +1,386 @@
+{
+  "type": "FeatureCollection",
+  "name": "appal-county-labels",
+  "crs": {
+    "type": "name",
+    "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "NAME": "ADAIR" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-85.280653443610547, 37.104163001946304]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "BATH" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-83.742670864264582, 38.144980914895022]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "BELL" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-83.674099213029379, 36.730655120552733]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "BOYD" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-82.687732502102548, 38.359579071555977]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "BREATHITT" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-83.324089290293387, 37.521624283873308]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "CARTER" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-83.049540537139734, 38.318180345917661]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "CASEY" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-84.928372693770186, 37.322289554343911]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "CLARK" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-84.14740927782826, 37.970856387793347]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "CLAY" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-83.714666686158452, 37.159704688729036]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "CLINTON" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-85.136018049280054, 36.727488881958273]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "CUMBERLAND" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-85.388453159716747, 36.78653655226509]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "ELLIOTT" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-83.097620422750524, 38.117898892230734]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "ESTILL" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-83.964334464456996, 37.692488900370599]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "FLEMING" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-83.696649774454798, 38.370114571344928]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "FLOYD" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-82.74570812639746, 37.557115675020526]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "GARRARD" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-84.53763719729632, 37.639584766053062]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "GREENUP" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-82.92227953439928, 38.545658243449552]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "HARLAN" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-83.217955803223319, 36.856981458402082]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "JACKSON" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-84.005769857993414, 37.419784122597513]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "JOHNSON" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-82.831543738060262, 37.846646365467784]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "KNOTT" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-82.954135167989421, 37.354059535381047]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "KNOX" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-83.854048606126085, 36.890672718285849]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "LAUREL" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-84.117804528831897, 37.110676930690417]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "LAWRENCE" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-82.734758739486523, 38.067885678507338]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "LEE" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-83.716280478093509, 37.594805816917614]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "LESLIE" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-83.381143927369777, 37.094073655351728]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "LETCHER" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-82.855286289262125, 37.121199491183035]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "LEWIS" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-83.378140355118887, 38.53150871452582]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "LINCOLN" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-84.660849507995508, 37.455373721798601]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "MADISON" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-84.278001812890238, 37.720191398627023]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "MAGOFFIN" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-83.064918589866934, 37.706481409652248]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "MARTIN" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-82.51329635015756, 37.801584561852231]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "MCCREARY" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-84.484178579976785, 36.737148500408367]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "MENIFEE" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-83.598876852434117, 37.941384748886477]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "MONTGOMERY" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-83.913106675282108, 38.033539548227431]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "MORGAN" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-83.258897503200117, 37.92228847421142]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "OWSLEY" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-83.683115875282951, 37.419212243785104]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "PERRY" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-83.221485660582843, 37.244300521647581]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "PIKE" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-82.395869115518181, 37.469034171980539]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "POWELL" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-83.823778050111997, 37.831151988284482]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "PULASKI" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-84.577180781129798, 37.103934126400347]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "ROCKCASTLE" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-84.315945587019158, 37.365185272440975]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "ROWAN" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-83.421080249897244, 38.19626358584523]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "RUSSELL" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-85.058692258366975, 36.991041261320738]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "WAYNE" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-84.828635647651708, 36.8012723969454]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "WHITLEY" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-84.145181860176507, 36.758080097309161]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "NAME": "WOLFE" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-83.493178999562588, 37.7393269561449]
+      }
+    }
+  ]
+}
