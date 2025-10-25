@@ -201,7 +201,7 @@
             [17, 1]
           ]
         },
-        "line-color": "#43BCFDFF",
+        "line-color": "#9EEEFF",
         "line-width": 1.33333
       },
       "minzoom": 9
@@ -214,7 +214,7 @@
       "filter": ["==", "_symbol", 8],
       "paint": {
         "fill-opacity": 0.4,
-        "fill-color": "#A2DBF9FF"
+        "fill-color": "#9EEEFF"
       }
     },
     {
@@ -224,8 +224,8 @@
       "source-layer": "NHDArea",
       "filter": ["!=", "_symbol", 8],
       "paint": {
-        "fill-color": "#60C7FFFF",
-        "fill-outline-color": "#43BCFDFF"
+        "fill-color": "#9EEEFF",
+        "fill-outline-color": "#9EEEFF"
       }
     },
     {
@@ -234,8 +234,8 @@
       "source": "NHDHydro_WM",
       "source-layer": "NHDWaterbody",
       "paint": {
-        "fill-color": "#60C7FFFF",
-        "fill-outline-color": "#43BCFDFF"
+        "fill-color": "#9EEEFF",
+        "fill-outline-color": "#9EEEFF"
       }
     },
     {

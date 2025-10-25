@@ -198,7 +198,7 @@ map.on("load", async () => {
       "circle-color": "#E4C64E",
       "circle-opacity": 0.9,
       "circle-stroke-color": "rgba(0,0,0,0.35)",
-      "circle-stroke-width": 0.6,
+      "circle-stroke-width": 0.9,
       "circle-radius": [
         "interpolate",
         ["linear"],
@@ -216,6 +216,41 @@ map.on("load", async () => {
     },
   });
 
+  // shadow for landslide cost per mile symbol
+  map.addLayer(
+    {
+      id: "landslides-costpm-shadow",
+      type: "circle",
+      source: "landslides",
+      minzoom: 7,
+      layout: { visibility: "visible" },
+      filter: [
+        "all",
+        ["has", "Cost per Mile"],
+        [">", ["coalesce", ["get", "Cost per Mile"], 0], 0],
+      ],
+      paint: {
+        "circle-radius": [
+          "interpolate",
+          ["linear"],
+          ["coalesce", ["get", "Cost per Mile"], 0],
+          500000,
+          10,
+          2000000,
+          20,
+          5000000,
+          30,
+          22500000,
+          40,
+        ],
+        "circle-color": "rgba(0, 0, 0, 1)",
+        "circle-blur": 1, // creates soft edge
+        "circle-opacity": 0.5,
+      },
+    },
+    "landslides-costpm"
+  ); // add underneath the main layer
+
   // ---- Graduated by Weighted Occurrences (blue) ----
   map.addLayer({
     id: "landslides-weightedocc",
@@ -232,7 +267,7 @@ map.on("load", async () => {
       "circle-color": "#50a1fa",
       "circle-opacity": 0.9,
       "circle-stroke-color": "rgba(0,0,0,0.35)",
-      "circle-stroke-width": 0.6,
+      "circle-stroke-width": 0.9,
       "circle-radius": [
         "interpolate",
         ["linear"],
@@ -248,6 +283,41 @@ map.on("load", async () => {
       ],
     },
   });
+
+  // shadow for weighted occurrences
+  map.addLayer(
+    {
+      id: "landslides-weightedocc-shadow",
+      type: "circle",
+      source: "landslides",
+      minzoom: 7,
+      layout: { visibility: "none" },
+      filter: [
+        "all",
+        ["has", "Weighted Occurrences"],
+        [">", ["coalesce", ["get", "Weighted Occurrences"], 0], 0],
+      ],
+      paint: {
+        "circle-radius": [
+          "interpolate",
+          ["linear"],
+          ["coalesce", ["get", "Weighted Occurrences"], 0],
+          6,
+          12,
+          12,
+          22,
+          18,
+          32,
+          26,
+          42,
+        ],
+        "circle-color": "rgba(0, 0, 0, 1)",
+        "circle-blur": 2, // creates soft edge
+        "circle-opacity": 0.5,
+      },
+    },
+    "landslides-weightedocc"
+  );
 
   map.addLayer({
     id: "county-labels",
@@ -423,9 +493,20 @@ map.on("load", async () => {
   window.setLandslideMetric = function (metric) {
     const showCost = metric === "costpm";
     map.setLayoutProperty(
+      "landslides-costpm-shadow",
+      "visibility",
+      showCost ? "visible" : "none"
+    );
+    map.setLayoutProperty(
       "landslides-costpm",
       "visibility",
       showCost ? "visible" : "none"
+    );
+
+    map.setLayoutProperty(
+      "landslides-weightedocc-shadow",
+      "visibility",
+      showCost ? "none" : "visible"
     );
     map.setLayoutProperty(
       "landslides-weightedocc",

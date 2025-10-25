@@ -293,7 +293,7 @@ body {
 }
 
 .maplibregl-popup {
-  max-width: 600px !important;
+  max-width: 300px !important;
 }
 
 /* MapLibre GL JS Popup styles using root font */
@@ -338,7 +338,7 @@ body {
   }
 
   .maplibregl-popup {
-    max-width: min(92vw, 520px) !important;
+    max-width: min(92vw, 290px) !important;
   }
 }
 
