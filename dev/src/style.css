@@ -309,6 +309,134 @@ body {
   @apply rounded-lg shadow-lg;
 }
 
+/* --- Help modal/backdrop/button --- */
+.maphelp_backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000; /* above h1 (650) & legend */
+}
+
+.maphelp_modal {
+  background: #fff;
+  color: #111;
+  width: min(92vw, 520px);
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+  padding: 18px 20px 14px;
+  position: relative;
+  font-family: var(--font, system-ui, sans-serif);
+}
+
+.maphelp_modal .title {
+  margin: 0 0 10px;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.maphelp_modal .list {
+  margin: 0 0 12px 1rem;
+  padding: 0;
+  line-height: 1.4;
+}
+.maphelp_modal .list li {
+  margin: 6px 0;
+}
+
+.maphelp_modal .actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.maphelp_modal .ok {
+  background: #111;
+  color: #fff;
+  border: 0;
+  border-radius: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+.maphelp_modal .ok:hover {
+  filter: brightness(1.1);
+}
+
+.maphelp_modal .remember {
+  font-size: 0.9rem;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.maphelp_close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #f3f3f3;
+  border: 0;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+.maphelp_close:hover {
+  background: #e8e8e8;
+}
+
+.maphelp_btn {
+  position: absolute;
+  top: 10px;
+  right: 50px;
+  z-index: 700;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 0;
+  cursor: pointer;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  font-weight: 800;
+  font-family: var(--font, system-ui, sans-serif);
+}
+
+.maphelp-ctrl {
+  /* nothing special; inherits the white rounded group box */
+}
+
+.maphelp_btn_ctrl {
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent; /* group provides bg */
+  cursor: pointer;
+  font-weight: 800;
+  font-family: var(--font, system-ui, sans-serif);
+  font-size: 16px;
+  color: #111;
+}
+
+.maphelp_btn_ctrl:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+.maphelp_btn_ctrl:active {
+  background-color: rgba(0, 0, 0, 0.12);
+}
+
+.maphelp_btn:hover {
+  background: #ffffffcc;
+}
+
 /* Small devices (portrait phones, 576px and below) */
 @media (max-width: 576px) and (orientation: portrait) {
   h1 {
@@ -321,7 +449,6 @@ body {
     left: 10px;
     bottom: auto;
     right: auto;
-
     font-size: 0.7em;
     max-width: 86vw;
     max-height: 40vh;
@@ -340,10 +467,19 @@ body {
   .maplibregl-popup {
     max-width: min(92vw, 290px) !important;
   }
+
+  .maphelp_modal {
+    width: min(94vw, 520px);
+    padding: 16px 16px 12px;
+  }
 }
 
-@media (max-width: 350px) {
+@media (max-width: 372px) {
   .legend_list {
     column-count: 1;
+  }
+  .maphelp_btn {
+    bottom: 10px;
+    right: 50px;
   }
 }

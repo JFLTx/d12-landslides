@@ -131,7 +131,135 @@ function buildGraduatedLegend(map, layerId, opts = {}) {
   }
 }
 
+// ---- Help modal logic (no CSS injection needed) ----
+function isTouchDevice() {
+  return (
+    window.matchMedia?.("(pointer: coarse)").matches ||
+    "ontouchstart" in window ||
+    navigator.maxTouchPoints > 0
+  );
+}
+
+const HELP_STORAGE_KEY = "d12_map_help_dismissed_v1";
+
+function buildHelpHTML() {
+  if (isTouchDevice()) {
+    return `
+      <h3 class="title">How to use this map (Mobile)</h3>
+      <ul class="list">
+        <li><b>Pan:</b> drag with one finger</li>
+        <li><b>Zoom:</b> pinch with two fingers</li>
+        <li><b>Rotate / Tilt:</b> twist or drag with two fingers</li>
+        <li><b>Details:</b> tap a circle</li>
+      </ul>
+    `;
+  } else {
+    return `
+      <h3 class="title">How to use this map (Desktop)</h3>
+      <ul class="list">
+        <li><b>Pan:</b> left-click + drag</li>
+        <li><b>Rotate / Tilt:</b> right-click + drag (or Ctrl + left-drag)</li>
+        <li><b>Zoom:</b> mouse wheel / trackpad</li>
+        <li><b>Details:</b> click a circle</li>
+      </ul>
+    `;
+  }
+}
+
+function showHelpModal({ force = false } = {}) {
+  if (!force && localStorage.getItem(HELP_STORAGE_KEY) === "1") return;
+
+  const backdrop = document.createElement("div");
+  backdrop.className = "maphelp_backdrop";
+  backdrop.setAttribute("role", "dialog");
+  backdrop.setAttribute("aria-modal", "true");
+
+  const modal = document.createElement("div");
+  modal.className = "maphelp_modal";
+  modal.innerHTML = `
+    <button class="maphelp_close" aria-label="Close help">×</button>
+    ${buildHelpHTML()}
+    <div class="actions">
+      <label class="remember">
+        <input type="checkbox" id="maphelp_dont_show" /> Don’t show again
+      </label>
+      <button class="ok">Got it</button>
+    </div>
+  `;
+
+  backdrop.appendChild(modal);
+  document.body.appendChild(backdrop);
+
+  const close = () => {
+    const dontShow = modal.querySelector("#maphelp_dont_show")?.checked;
+    if (dontShow) localStorage.setItem(HELP_STORAGE_KEY, "1");
+    backdrop.remove();
+  };
+
+  modal.querySelector(".maphelp_close").addEventListener("click", close);
+  modal.querySelector(".ok").addEventListener("click", close);
+  backdrop.addEventListener("click", (e) => {
+    if (e.target === backdrop) close();
+  });
+  document.addEventListener(
+    "keydown",
+    (e) => {
+      if (e.key === "Escape" && backdrop.isConnected) close();
+    },
+    { once: true }
+  );
+}
+
+function injectHelpButton() {
+  if (document.querySelector(".maphelp_btn")) return;
+  const btn = document.createElement("button");
+  btn.className = "maphelp_btn";
+  btn.title = "Map help";
+  btn.textContent = "?";
+  btn.addEventListener("click", () => showHelpModal({ force: true }));
+  document.body.appendChild(btn);
+}
+
+class HelpControl {
+  onAdd(map) {
+    this._map = map;
+    const c = document.createElement("div");
+    c.className = "maplibregl-ctrl maplibregl-ctrl-group maphelp-ctrl";
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "maphelp_btn_ctrl";
+    btn.setAttribute("aria-label", "Map help");
+    btn.innerHTML = "?";
+    btn.addEventListener("click", () => showHelpModal({ force: true }));
+
+    c.appendChild(btn);
+    this._container = c;
+    return c;
+  }
+  onRemove() {
+    this._container?.remove();
+    this._map = undefined;
+  }
+}
+
 map.on("load", async () => {
+  map.setPitch(55);
+  map.setBearing(35);
+  map.dragRotate.enable();
+  map.touchZoomRotate.enableRotation();
+  map.setTerrain({
+    source: "terrainSource",
+    exaggeration: 2,
+  });
+  // add lighting effect to terrain
+  // map.setLight({
+  //   anchor: "viewport",
+  //   color: "white",
+  //   intensity: 1,
+  //   position: [1.5, 150, 80], // [radial, azimuthal, polar] in degrees
+  // });
+
   // Add sky style to the map, giving an atmospheric effect
   map.setSky({
     "sky-color": "#61C2FEFF",
@@ -181,7 +309,7 @@ map.on("load", async () => {
   const styleData = await fetch("./style.json").then((r) => r.json());
 
   // fitBounds to the slidesGeoJSON
-  map.fitBounds(getGeoJSONBounds(slidesGeoJSON), { padding: 40, maxZoom: 12 });
+  map.fitBounds(getGeoJSONBounds(slidesGeoJSON), { padding: 20, maxZoom: 12 });
 
   map.addLayer({
     id: "landslides-costpm",
@@ -514,6 +642,8 @@ map.on("load", async () => {
       showCost ? "none" : "visible"
     );
   };
+
+  showHelpModal(); // shows the helper function window when the map loads
 }); // end map.on("load") function
 
 // Add basic map controls
@@ -526,17 +656,6 @@ map.addControl(
   })
 );
 
-// // Add geolocate control to the map
-// map.addControl(
-//   new maplibregl.GeolocateControl({
-//     positionOptions: {
-//       enableHighAccuracy: true,
-//     },
-//     trackUserLocation: true,
-//     showUserHeading: true,
-//   })
-// );
-
 // Add terrain control for 3D effect
 map.addControl(
   new maplibregl.TerrainControl({
@@ -544,6 +663,8 @@ map.addControl(
     exaggeration: 2,
   })
 );
+
+map.addControl(new HelpControl(), "top-right"); // adds new helper control button
 
 // Event listeners to monitor map changes
 map.on("move", () => {
