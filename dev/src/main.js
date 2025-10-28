@@ -598,6 +598,9 @@ map.on("load", async () => {
           }).format(costVal);
 
       const mp = safe(p["Mid MP"]);
+      const minMP = safe(p["Min MP"]);
+      const maxMP = safe(p["Max MP"]);
+      const l = safe(p["Total Distance"]);
       const occ = p.Occurrences ?? p.occurrences ?? p["Weighted Occurrences"];
       const occStr = occ == null ? "—" : nf0.format(occ);
       const aadt = p.AADT == null ? "—" : nf0.format(p.AADT);
@@ -607,16 +610,21 @@ map.on("load", async () => {
         lon != null && lat != null ? streetViewURL({ lon, lat }) : null;
 
       const svHtml = sv
-        ? `<a class="text-blue-600 hover:text-blue-700 underline font-medium"
+        ? `<a class="text-blue-600 hover:text-blue-900 underline font-medium"
         href="${sv}" target="_blank" rel="noopener">Open Street View</a>`
         : "Street View: —";
 
       const html = `
-    <h2 class="text-xl">Landslide ID: ${id}</h2><p>Landslide in ${county} County, occurred along ${route}<br>
-     <br>Number of Occurrences: ${occ} 
-     <br>Cost per Mile: ${cost}
-     <br>AADT: ${aadt} 
-     <br>Mile Point: ${mp} &nbsp;•&nbsp; ${svHtml}</p>
+    <h2 class="text-xl font-bold">Landslide ID: ${id}</h2>
+    <p>
+    Landslide in ${county} County, occurred along ${route}<br>
+     <br><strong>Number of Occurrences</strong>: ${occ} 
+     <br><strong>Cost per Mile</strong>: ${cost}
+     <br><strong>AADT</strong>: ${aadt} 
+     <br><strong>Total Length</strong>: ${l} miles
+     <br>&emsp;From Mile Point ${minMP} to ${maxMP}
+     <br><strong>Mid Mile Point</strong>: ${mp} &nbsp;•&nbsp; ${svHtml}
+     </p>
     `;
 
       new maplibregl.Popup({ closeButton: true, offset: 10 })
