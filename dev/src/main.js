@@ -132,39 +132,67 @@ function buildGraduatedLegend(map, layerId, opts = {}) {
 }
 
 // ---- Help modal logic (no CSS injection needed) ----
-function isTouchDevice() {
-  return (
-    window.matchMedia?.("(pointer: coarse)").matches ||
-    "ontouchstart" in window ||
-    navigator.maxTouchPoints > 0
-  );
+function inputProfile() {
+  const anyCoarse =
+    window.matchMedia?.("(any-pointer: coarse)")?.matches || false;
+  const anyHover = window.matchMedia?.("(any-hover: hover)")?.matches || false;
+  const uaMobile =
+    navigator.userAgentData?.mobile ||
+    /Mobi|Android/i.test(navigator.userAgent);
+  return {
+    mobileLikely: (anyCoarse && !anyHover) || uaMobile,
+    hybridLikely: anyCoarse && anyHover, // example: Surface + mouse
+    desktopLikely: !anyCoarse && anyHover,
+  };
 }
 
 const HELP_STORAGE_KEY = "d12_map_help_dismissed_v1";
 
 function buildHelpHTML() {
-  if (isTouchDevice()) {
+  const p = inputProfile();
+  // checks if the user is using a mouse and touchpad, returns hybrid help message
+  if (p.hybridLikely) {
+    return `
+      <h3 class="title">How to use this map (Mouse & Touch)</h3>
+      <ul class="list">
+        <li><b>Pan:</b> left-click + drag • or one-finger drag</li>
+        <li><b>Rotate/Tilt:</b> right-click + drag (or Ctrl + left-drag) • or two-finger drag</li>
+        <li><b>Zoom:</b> mouse wheel/trackpad • or two-finger pinch</li>
+        <li><b>Details:</b> click/tap a circle</li>
+      </ul>
+    `;
+  }
+  // checks if the user is on mobile, returns a mobile help message
+  if (p.mobileLikely) {
     return `
       <h3 class="title">How to use this map (Mobile)</h3>
       <ul class="list">
         <li><b>Pan:</b> drag with one finger</li>
         <li><b>Zoom:</b> pinch with two fingers</li>
-        <li><b>Rotate / Tilt:</b> twist or drag with two fingers</li>
+        <li><b>Rotate / Tilt:</b> twist or two-finger drag</li>
         <li><b>Details:</b> tap a circle</li>
       </ul>
     `;
-  } else {
-    return `
-      <h3 class="title">How to use this map (Desktop)</h3>
-      <ul class="list">
-        <li><b>Pan:</b> left-click + drag</li>
-        <li><b>Rotate / Tilt:</b> right-click + drag (or Ctrl + left-drag)</li>
-        <li><b>Zoom:</b> mouse wheel / trackpad</li>
-        <li><b>Details:</b> click a circle</li>
-      </ul>
-    `;
   }
+  // checks if the user is on desktop, returns a desktop help message
+  return `
+    <h3 class="title">How to use this map (Desktop)</h3>
+    <ul class="list">
+      <li><b>Pan:</b> left-click + drag</li>
+      <li><b>Rotate / Tilt:</b> right-click + drag (or Ctrl + left-drag)</li>
+      <li><b>Zoom:</b> mouse wheel / trackpad</li>
+      <li><b>Details:</b> click a circle</li>
+    </ul>
+  `;
 }
+
+// check which help message version is being loaded in the browser
+// console.table({
+//   anyPointerCoarse: window.matchMedia?.("(any-pointer: coarse)")?.matches,
+//   anyHoverHover: window.matchMedia?.("(any-hover: hover)")?.matches,
+//   maxTouchPoints: navigator.maxTouchPoints,
+//   uaMobile: navigator.userAgentData?.mobile,
+// });
 
 function showHelpModal({ force = false } = {}) {
   if (!force && localStorage.getItem(HELP_STORAGE_KEY) === "1") return;
