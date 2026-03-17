@@ -181,7 +181,10 @@ h1 {
   font-size: 3em;
   letter-spacing: 0.05em;
   color: whitesmoke;
-  text-shadow: 0 0 2px var(--dark), 0 0 5px var(--dark), 0 0 7px var(--dark),
+  text-shadow:
+    0 0 2px var(--dark),
+    0 0 5px var(--dark),
+    0 0 7px var(--dark),
     0 0 10px var(--dark);
 }
 
@@ -195,7 +198,7 @@ h1 {
   font-family: var(--font);
   font-size: 0.8em;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-  max-width: min(70vw, 320px);
+  max-width: min(70vw, 300px);
   max-height: 45vh;
   overflow: auto;
   -webkit-overflow-scrolling: touch;
@@ -266,10 +269,45 @@ h1 {
   opacity: 0.95;
 }
 
+.legend_switch label {
+  display: block;
+}
+
+.legend_wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.legend_color_key {
+  display: flex;
+  flex-direction: row;
+  gap: 14px;
+  margin-top: 2px;
+  flex-wrap: nowrap;
+}
+
+.legend_color_item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 1.1;
+}
+
+.legend_swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid #222;
+  display: inline-block;
+  flex: 0 0 14px;
+}
+
 /* labels + ticks to the right */
 .legend_labels {
   position: relative;
-  min-width: 160px;
+  min-width: 120px;
 }
 .legend_labels .tick {
   position: absolute;
@@ -287,9 +325,32 @@ h1 {
   transform: translateY(-50%); /* vertical centering on the tick line */
 }
 
+.legend_section_break {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 6px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+}
+
+.legend_section_break::before,
+.legend_section_break::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
 /* add styles globally to project */
 body {
   font-family: var(--font);
+}
+
+.top50-choice:hover {
+  background: #f6f6f6 !important;
+  border-color: #bcbcbc !important;
 }
 
 .maplibregl-popup {

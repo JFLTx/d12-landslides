@@ -28,6 +28,29 @@
       "type": "vector",
       "url": "pmtiles://https://contig.us/jflt/data/d12-roads.pmtiles"
     },
+    "landslides": {
+      "type": "geojson",
+      "data": "./data/landslides.geojson"
+    },
+    "top50": {
+      "type": "geojson",
+      "data": "./data/top50-landslides.geojson"
+    },
+    "top50-labels": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": []
+      }
+    },
+    "county_labels": {
+      "type": "geojson",
+      "data": "./data/appal-county-labels.geojson"
+    },
+    "city_labels": {
+      "type": "geojson",
+      "data": "./data/cities.geojson"
+    },
     "hillshade": {
       "type": "raster",
       "tiles": [
@@ -243,7 +266,7 @@
       "type": "line",
       "source": "roads",
       "source-layer": "d12roads4326",
-      "minzoom": 12,
+      "minzoom": 13,
       "filter": [
         "in",
         ["get", "ROUTE_TYPE"],
@@ -271,7 +294,7 @@
       "type": "line",
       "source": "roads",
       "source-layer": "d12roads4326",
-      "minzoom": 12,
+      "minzoom": 13,
       "filter": [
         "in",
         ["get", "ROUTE_TYPE"],
@@ -291,54 +314,6 @@
           1.8,
           18,
           2.4
-        ]
-      }
-    },
-    {
-      "id": "roads-county-casing",
-      "type": "line",
-      "source": "roads",
-      "source-layer": "d12roads4326",
-      "minzoom": 12,
-      "filter": ["==", ["get", "ROUTE_TYPE"], "COUNTY"],
-      "layout": { "line-cap": "round", "line-join": "round" },
-      "paint": {
-        "line-color": "#2f2f2f",
-        "line-opacity": 0.95,
-        "line-width": [
-          "interpolate",
-          ["linear"],
-          ["zoom"],
-          14,
-          1.8,
-          16,
-          2.6,
-          18,
-          3.4
-        ]
-      }
-    },
-    {
-      "id": "roads-county-fill",
-      "type": "line",
-      "source": "roads",
-      "source-layer": "d12roads4326",
-      "minzoom": 12,
-      "filter": ["==", ["get", "ROUTE_TYPE"], "COUNTY"],
-      "layout": { "line-cap": "round", "line-join": "round" },
-      "paint": {
-        "line-color": "#f2f2f2",
-        "line-opacity": 1,
-        "line-width": [
-          "interpolate",
-          ["linear"],
-          ["zoom"],
-          14,
-          1.2,
-          16,
-          2.0,
-          18,
-          2.8
         ]
       }
     },
@@ -648,7 +623,7 @@
       ],
       "layout": {
         "symbol-placement": "line",
-        "symbol-spacing": 300,
+        "symbol-spacing": 350,
         "text-field": ["to-string", ["get", "ROUTE_LBL"]],
         "text-font": ["Montserrat Regular", "Montserrat SemiBold"],
         "text-size": [
@@ -685,7 +660,7 @@
       ],
       "layout": {
         "symbol-placement": "line",
-        "symbol-spacing": 325,
+        "symbol-spacing": 375,
         "text-field": ["to-string", ["get", "ROUTE_LBL"]],
         "text-font": ["Montserrat Regular", "Montserrat SemiBold"],
         "text-size": ["interpolate", ["linear"], ["zoom"], 9, 10, 12, 12],
@@ -712,7 +687,7 @@
       ],
       "layout": {
         "symbol-placement": "line",
-        "symbol-spacing": 350,
+        "symbol-spacing": 400,
         "text-field": ["to-string", ["get", "ROUTE_LBL"]],
         "text-font": ["Montserrat Regular", "Montserrat SemiBold"],
         "text-size": ["interpolate", ["linear"], ["zoom"], 10, 10, 13, 12],
@@ -731,7 +706,7 @@
       "type": "symbol",
       "source": "roads",
       "source-layer": "d12roads4326",
-      "minzoom": 12,
+      "minzoom": 14.25,
       "filter": [
         "all",
         [
@@ -746,7 +721,7 @@
       ],
       "layout": {
         "symbol-placement": "line",
-        "symbol-spacing": 400,
+        "symbol-spacing": 500,
         "text-field": ["to-string", ["get", "RD_NAME"]],
         "text-font": ["Montserrat Regular", "Montserrat Medium"],
         "text-size": ["interpolate", ["linear"], ["zoom"], 12, 8, 14, 10],
@@ -759,6 +734,305 @@
         "text-color": "#ffffff",
         "text-halo-color": "#2a2a2a",
         "text-halo-width": 1
+      }
+    },
+    {
+      "id": "landslides-costpm-shadow",
+      "type": "circle",
+      "source": "landslides",
+      "minzoom": 5,
+      "layout": { "visibility": "none" },
+      "filter": [
+        "all",
+        ["has", "Cost per Mile"],
+        [">", ["coalesce", ["get", "Cost per Mile"], 0], 0]
+      ],
+      "paint": {
+        "circle-radius": [
+          "interpolate",
+          ["linear"],
+          ["coalesce", ["get", "Cost per Mile"], 0],
+          500000,
+          10,
+          2000000,
+          20,
+          5000000,
+          30,
+          22500000,
+          40
+        ],
+        "circle-color": "rgba(0, 0, 0, 1)",
+        "circle-blur": 1,
+        "circle-opacity": 0.5
+      }
+    },
+    {
+      "id": "landslides-costpm",
+      "type": "circle",
+      "source": "landslides",
+      "minzoom": 5,
+      "layout": { "visibility": "none" },
+      "filter": [
+        "all",
+        ["has", "Cost per Mile"],
+        [">", ["coalesce", ["get", "Cost per Mile"], 0], 0]
+      ],
+      "paint": {
+        "circle-color": "#E4C64E",
+        "circle-opacity": 0.9,
+        "circle-stroke-color": "rgba(0,0,0,0.35)",
+        "circle-stroke-width": 0.9,
+        "circle-radius": [
+          "interpolate",
+          ["linear"],
+          ["coalesce", ["get", "Cost per Mile"], 0],
+          500000,
+          6,
+          2000000,
+          16,
+          5000000,
+          26,
+          22500000,
+          36
+        ]
+      }
+    },
+    {
+      "id": "landslides-weightedocc-shadow",
+      "type": "circle",
+      "source": "landslides",
+      "minzoom": 5,
+      "layout": { "visibility": "none" },
+      "filter": [
+        "all",
+        ["has", "Weighted Occurrences"],
+        [">", ["coalesce", ["get", "Weighted Occurrences"], 0], 0]
+      ],
+      "paint": {
+        "circle-radius": [
+          "interpolate",
+          ["linear"],
+          ["coalesce", ["get", "Weighted Occurrences"], 0],
+          6,
+          12,
+          12,
+          22,
+          18,
+          32,
+          26,
+          42
+        ],
+        "circle-color": "rgba(0, 0, 0, 1)",
+        "circle-blur": 2,
+        "circle-opacity": 0.5
+      }
+    },
+    {
+      "id": "landslides-weightedocc",
+      "type": "circle",
+      "source": "landslides",
+      "minzoom": 5,
+      "layout": { "visibility": "none" },
+      "filter": [
+        "all",
+        ["has", "Weighted Occurrences"],
+        [">", ["coalesce", ["get", "Weighted Occurrences"], 0], 0]
+      ],
+      "paint": {
+        "circle-color": "#50a1fa",
+        "circle-opacity": 0.9,
+        "circle-stroke-color": "rgba(0,0,0,0.35)",
+        "circle-stroke-width": 0.9,
+        "circle-radius": [
+          "interpolate",
+          ["linear"],
+          ["coalesce", ["get", "Weighted Occurrences"], 0],
+          6,
+          6,
+          12,
+          16,
+          18,
+          26,
+          26,
+          36
+        ]
+      }
+    },
+    {
+      "id": "top50-shadow",
+      "type": "circle",
+      "source": "top50",
+      "minzoom": 7,
+      "layout": { "visibility": "visible" },
+      "filter": [
+        "all",
+        ["has", "Risk Index"],
+        [">", ["coalesce", ["get", "Risk Index"], 0], 0]
+      ],
+      "paint": {
+        "circle-radius": [
+          "interpolate",
+          ["linear"],
+          ["coalesce", ["get", "Risk Index"], 0],
+          0.12499817697234063,
+          12,
+          0.24,
+          22,
+          0.36,
+          32,
+          0.47817561294080002,
+          42
+        ],
+        "circle-color": "rgba(0, 0, 0, 1)",
+        "circle-blur": 1.5,
+        "circle-opacity": 0.45
+      }
+    },
+    {
+      "id": "top50",
+      "type": "circle",
+      "source": "top50",
+      "minzoom": 7,
+      "layout": { "visibility": "visible" },
+      "filter": [
+        "all",
+        ["has", "Risk Index"],
+        [">", ["coalesce", ["get", "Risk Index"], 0], 0]
+      ],
+      "paint": {
+        "circle-color": [
+          "match",
+          ["get", "Score Type"],
+          "LS",
+          "#2C5AA0",
+          "RF",
+          "#C23B32",
+          "#666666"
+        ],
+        "circle-opacity": 1,
+        "circle-stroke-color": "rgba(0,0,0,0.35)",
+        "circle-stroke-width": 0.9,
+        "circle-radius": [
+          "interpolate",
+          ["linear"],
+          ["coalesce", ["get", "Risk Index"], 0],
+          0.12499817697234063,
+          6,
+          0.24,
+          16,
+          0.36,
+          26,
+          0.47817561294080002,
+          36
+        ]
+      }
+    },
+    {
+      "id": "top50-rank-labels",
+      "type": "symbol",
+      "source": "top50-labels",
+      "minzoom": 8,
+      "layout": {
+        "text-field": ["to-string", ["get", "Risk Index Rank"]],
+        "text-font": ["Montserrat Bold", "Montserrat SemiBold"],
+        "text-size": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          8,
+          10,
+          10,
+          11,
+          12,
+          12,
+          14,
+          13
+        ],
+        "text-allow-overlap": false,
+        "text-ignore-placement": false,
+        "text-anchor": "center"
+      },
+      "paint": {
+        "text-color": [
+          "match",
+          ["get", "Score Type"],
+          "LS",
+          "#2C5AA0",
+          "RF",
+          "#C23B32",
+          "#444444"
+        ],
+        "text-halo-color": "rgba(255,255,255,0.95)",
+        "text-halo-width": 1.25,
+        "text-halo-blur": 0.5
+      }
+    },
+    {
+      "id": "county-labels",
+      "type": "symbol",
+      "source": "county_labels",
+      "maxzoom": 11,
+      "filter": [
+        "in",
+        ["get", "NAME"],
+        [
+          "literal",
+          ["LAWRENCE", "JOHNSON", "MARTIN", "FLOYD", "PIKE", "KNOTT", "LETCHER"]
+        ]
+      ],
+      "layout": {
+        "symbol-placement": "point",
+        "text-field": ["to-string", ["get", "NAME"]],
+        "text-font": ["Montserrat Bold", "Montserrat SemiBold"],
+        "text-size": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          7,
+          14,
+          12,
+          15,
+          15,
+          16
+        ],
+        "text-allow-overlap": false,
+        "text-anchor": "center"
+      },
+      "paint": {
+        "text-color": "#FFFFFF",
+        "text-halo-color": "#222",
+        "text-halo-width": 1.5,
+        "text-halo-blur": 2
+      }
+    },
+    {
+      "id": "city-labels",
+      "type": "symbol",
+      "source": "city_labels",
+      "minzoom": 10,
+      "layout": {
+        "symbol-placement": "point",
+        "text-field": ["to-string", ["get", "NAME2"]],
+        "text-font": ["Montserrat SemiBold", "Montserrat Medium"],
+        "text-size": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          10,
+          12,
+          12,
+          13,
+          15,
+          15
+        ],
+        "text-allow-overlap": false,
+        "text-anchor": "center"
+      },
+      "paint": {
+        "text-color": "#ffffff",
+        "text-halo-color": "#222",
+        "text-halo-width": 1.2,
+        "text-halo-blur": 2
       }
     }
   ],
