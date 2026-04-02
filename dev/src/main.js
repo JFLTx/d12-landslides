@@ -8,14 +8,83 @@ maplibregl.addProtocol("pmtiles", protocol.tile);
 
 const map = new maplibregl.Map({
   container: "map",
-  center: [-85, 36], // starting position [lng, lat]
-  zoom: 5, // starting zoom
-  maxPitch: 85, // max pitch allowed
-  //   hash: true, // sync map position with URL
+  center: [-85, 36],
+  zoom: 5,
+  maxPitch: 85,
   style: "./style.json",
 });
 
-// getGeoJSONBounds function
+// -----------------------------------------------------------------------------
+// CONFIG
+// -----------------------------------------------------------------------------
+
+const top50Url = "./data/top50-landslides.geojson";
+const top300Url = "./data/top300-landslides.geojson";
+const landslidesUrl = "./data/landslides.geojson";
+
+const datasets = {
+  top50: {
+    metric: "top50",
+    layer: "top50",
+    shadow: "top50-shadow",
+    labels: "top50-rank-labels",
+    legendTitle: "Top 50 Risk Index",
+    chooser: true,
+    chooserScoreLabel: "Risk Index",
+    chooserValueField: "Risk Index Rank",
+    legendIsDecimal: true,
+  },
+  top300: {
+    metric: "top300",
+    layer: "top300",
+    shadow: "top300-shadow",
+    labels: null,
+    legendTitle: "LS/RF Desktop Score",
+    chooser: true,
+    chooserScoreLabel: "Desktop Score",
+    chooserValueField: "Normalized DS Score",
+    legendIsDecimal: true,
+  },
+  costpm: {
+    metric: "costpm",
+    layer: "landslides-costpm",
+    shadow: "landslides-costpm-shadow",
+    labels: null,
+    legendTitle: "Cost",
+    chooser: false,
+    legendIsCurrency: true,
+  },
+  weighted: {
+    metric: "weighted",
+    layer: "landslides-weightedocc",
+    shadow: "landslides-weightedocc-shadow",
+    labels: null,
+    legendTitle: "Weighted Occurrences",
+    chooser: false,
+    legendIsNumber: true,
+  },
+  predesktop: {
+    metric: "predesktop",
+    layer: "landslides-pds",
+    shadow: "landslides-pds-shadow",
+    labels: null,
+    legendTitle: "Norm. Pre-Desktop Score",
+    chooser: false,
+    legendIsDecimal: true,
+  },
+};
+
+const groupedFeatures = {
+  top50: new Map(),
+  top300: new Map(),
+};
+
+const helpStorageKey = "d12_map_help_dismissed_v1";
+
+// -----------------------------------------------------------------------------
+// GENERAL HELPERS
+// -----------------------------------------------------------------------------
+
 function getGeoJSONBounds(geojson) {
   const bounds = new maplibregl.LngLatBounds();
   geojson.features.forEach((f) => {
@@ -32,17 +101,34 @@ function getGeoJSONBounds(geojson) {
   return bounds;
 }
 
-// simple number formatters
 const nf = new Intl.NumberFormat("en-US");
 const cf0 = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
   maximumFractionDigits: 0,
 });
+const nf0 = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 
-// pull [value, size] stops from an interpolate expression
+const num = (v) => (v == null || v === "" ? null : Number(v));
+const safe = (v) => (v == null || v === "" ? "—" : v);
+
+function streetViewURL({ lon, lat }) {
+  return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
+}
+
+function scoreTypeLabel(value) {
+  if (value === "LS") return "Landslide";
+  if (value === "RF") return "Rockfall";
+  return safe(value);
+}
+
+function scoreTypeColor(value) {
+  if (value === "LS") return "#2C5AA0";
+  if (value === "RF") return "#C23B32";
+  return "#444";
+}
+
 function getInterpolateStops(expr) {
-  // expr looks like: ["interpolate", ["linear"], <input>, v1, r1, v2, r2, ...]
   if (!Array.isArray(expr) || expr[0] !== "interpolate") return [];
   const pairs = [];
   for (let i = 3; i < expr.length - 1; i += 2) {
@@ -51,39 +137,149 @@ function getInterpolateStops(expr) {
   return pairs;
 }
 
-// build legend rows for the active layer
-function buildGraduatedLegend(map, layerId, opts = {}) {
+function getFeatureCoords(feature) {
+  const p = feature?.properties || {};
+  const coords = feature?.geometry?.coordinates || [];
+  const lon = num(p.Longitude ?? p.longitude ?? p.X ?? p.x ?? coords[0]);
+  const lat = num(p.Latitude ?? p.latitude ?? p.Y ?? p.y ?? coords[1]);
+  return { lon, lat, coords: [lon ?? coords[0], lat ?? coords[1]] };
+}
+
+function getFeatureKey(feature) {
+  const { lon, lat } = getFeatureCoords(feature);
+  if (lon == null || lat == null || Number.isNaN(lon) || Number.isNaN(lat)) {
+    return "";
+  }
+  return `${Number(lon).toFixed(8)}|${Number(lat).toFixed(8)}`;
+}
+
+// -----------------------------------------------------------------------------
+// DATASET INDEXING
+// -----------------------------------------------------------------------------
+
+function sortFeatures(features, kind) {
+  if (kind === "top50") {
+    return [...features].sort((a, b) => {
+      const rankA = Number(a?.properties?.["Risk Index Rank"]);
+      const rankB = Number(b?.properties?.["Risk Index Rank"]);
+
+      if (!Number.isNaN(rankA) && !Number.isNaN(rankB) && rankA !== rankB) {
+        return rankA - rankB;
+      }
+
+      const typeA = safe(a?.properties?.["Score Type"]);
+      const typeB = safe(b?.properties?.["Score Type"]);
+      if (typeA !== typeB) return typeA.localeCompare(typeB);
+
+      const apsA = safe(a?.properties?.["Unique APS-Code"]);
+      const apsB = safe(b?.properties?.["Unique APS-Code"]);
+      return apsA.localeCompare(apsB);
+    });
+  }
+
+  if (kind === "top300") {
+    return [...features].sort((a, b) => {
+      const dsA = Number(a?.properties?.["Normalized DS Score"]);
+      const dsB = Number(b?.properties?.["Normalized DS Score"]);
+
+      if (!Number.isNaN(dsA) && !Number.isNaN(dsB) && dsA !== dsB) {
+        return dsB - dsA;
+      }
+
+      const typeA = safe(a?.properties?.["Score Type"]);
+      const typeB = safe(b?.properties?.["Score Type"]);
+      if (typeA !== typeB) return typeA.localeCompare(typeB);
+
+      const apsA = safe(a?.properties?.["Unique APS-Code"]);
+      const apsB = safe(b?.properties?.["Unique APS-Code"]);
+      return apsA.localeCompare(apsB);
+    });
+  }
+
+  return features;
+}
+
+function indexFeatures(geojson, kind) {
+  const store = groupedFeatures[kind];
+  if (!store) return;
+
+  store.clear();
+
+  (geojson.features || []).forEach((feature) => {
+    const key = getFeatureKey(feature);
+    if (!key) return;
+
+    if (!store.has(key)) {
+      store.set(key, []);
+    }
+    store.get(key).push(feature);
+  });
+
+  for (const [key, features] of store.entries()) {
+    store.set(key, sortFeatures(features, kind));
+  }
+}
+
+function filterTop50Labels(geojson) {
+  const byAPS = new Map();
+
+  (geojson.features || []).forEach((feature) => {
+    const p = feature.properties || {};
+    const aps = p["Unique APS-Code"];
+    const rank = Number(p["Risk Index Rank"]);
+
+    if (!aps) return;
+
+    if (!byAPS.has(aps)) {
+      byAPS.set(aps, feature);
+      return;
+    }
+
+    const existing = byAPS.get(aps);
+    const existingRank = Number(existing?.properties?.["Risk Index Rank"]);
+
+    if (
+      !Number.isNaN(rank) &&
+      !Number.isNaN(existingRank) &&
+      rank < existingRank
+    ) {
+      byAPS.set(aps, feature);
+    }
+  });
+
+  return {
+    type: "FeatureCollection",
+    features: [...byAPS.values()],
+  };
+}
+
+// -----------------------------------------------------------------------------
+// LEGEND
+// -----------------------------------------------------------------------------
+
+function buildGraduatedLegend(map, metric) {
   const container = document.querySelector(".legend");
   if (!container) return;
 
-  const layer = map.getLayer(layerId);
+  const cfg = datasets[metric];
+  if (!cfg) return;
+
+  const layer = map.getLayer(cfg.layer);
   if (!layer) {
     console.warn(
-      `Legend skipped: layer "${layerId}" not found in loaded style.`,
+      `Legend skipped: layer "${cfg.layer}" not found in loaded style.`,
     );
     return;
   }
 
-  const metric = opts.metric || "costpm";
-
-  const title =
-    metric === "top50"
-      ? "Top 50 Risk Index"
-      : layerId === "landslides-costpm"
-        ? "Cost per Mile"
-        : "Weighted Occurrences";
-  const color = map.getPaintProperty(layerId, "circle-color") || "#888";
-  const radiusExpr = map.getPaintProperty(layerId, "circle-radius");
+  const radiusExpr = map.getPaintProperty(cfg.layer, "circle-radius");
   const stops = getInterpolateStops(radiusExpr);
   if (!stops.length) return;
 
-  // make two sorted copies
-  const stopsDesc = [...stops].sort((a, b) => Number(b[1]) - Number(a[1])); // big → small
-
+  const stopsDesc = [...stops].sort((a, b) => Number(b[1]) - Number(a[1]));
   const maxR = Math.max(...stops.map(([, r]) => Number(r)));
   const maxD = Math.max(10, Math.round(maxR * 2));
 
-  // shell
   const box = document.createElement("div");
   box.className = "legend_box";
 
@@ -97,15 +293,14 @@ function buildGraduatedLegend(map, layerId, opts = {}) {
   bubbles.style.setProperty("--maxD", `${maxD}px`);
   bubbles.style.setProperty(
     "--color",
-    metric === "top50"
+    metric === "top50" || metric === "top300"
       ? "#ebebeb"
-      : map.getPaintProperty(layerId, "circle-color") || "#888",
+      : map.getPaintProperty(cfg.layer, "circle-color") || "#888",
   );
 
   const labels = document.createElement("div");
   labels.className = "legend_labels";
 
-  // 1) CIRCLES: largest → smallest so smallest is appended last (on top)
   stopsDesc.forEach(([, r]) => {
     const d = Math.max(10, Math.round(r * 2));
     const c = document.createElement("span");
@@ -115,9 +310,8 @@ function buildGraduatedLegend(map, layerId, opts = {}) {
     bubbles.appendChild(c);
   });
 
-  // 2) LABELS/TICKS: also largest → smallest for a top→bottom descending list
   stopsDesc.forEach(([val, r], i) => {
-    const y = maxD - 2 * r; // label positioned at top edge of each circle
+    const y = maxD - 2 * r;
     const tick = document.createElement("span");
     tick.className = "tick";
     tick.style.top = `${y}px`;
@@ -125,20 +319,19 @@ function buildGraduatedLegend(map, layerId, opts = {}) {
     const lbl = document.createElement("div");
     lbl.className = "lbl";
     lbl.style.top = `${y}px`;
+
     const isLast = i === stopsDesc.length - 1;
-    if (metric === "top50") {
+
+    if (cfg.legendIsDecimal) {
       lbl.textContent = isLast
         ? `≥ ${Number(val).toFixed(3)}`
         : `≤ ${Number(val).toFixed(3)}`;
+    } else if (cfg.legendIsCurrency) {
+      lbl.textContent = isLast
+        ? `≥ ${cf0.format(val)}`
+        : `≤ ${cf0.format(val)}`;
     } else {
-      lbl.textContent =
-        layerId === "landslides-costpm"
-          ? isLast
-            ? `≥ ${cf0.format(val)}`
-            : `≤ ${cf0.format(val)}`
-          : isLast
-            ? `≥ ${nf.format(val)}`
-            : `≤ ${nf.format(val)}`;
+      lbl.textContent = isLast ? `≥ ${nf.format(val)}` : `≤ ${nf.format(val)}`;
     }
 
     labels.appendChild(tick);
@@ -148,7 +341,7 @@ function buildGraduatedLegend(map, layerId, opts = {}) {
   leftCol.appendChild(bubbles);
 
   let colorKey = null;
-  if (metric === "top50") {
+  if (metric === "top50" || metric === "top300") {
     colorKey = document.createElement("div");
     colorKey.className = "legend_color_key";
     colorKey.innerHTML = `
@@ -176,14 +369,245 @@ function buildGraduatedLegend(map, layerId, opts = {}) {
 
   const titleEl = container.querySelector(".legend_title");
   const bodyEl = container.querySelector(".legend_body");
-  if (titleEl) titleEl.textContent = title;
+  if (titleEl) titleEl.textContent = cfg.legendTitle;
   if (bodyEl) {
     bodyEl.innerHTML = "";
     bodyEl.appendChild(wrapper);
   }
 }
 
-// ---- Help modal logic (no CSS injection needed) ----
+// -----------------------------------------------------------------------------
+// POPUPS
+// -----------------------------------------------------------------------------
+
+function buildPopup(feature, kind) {
+  const p = feature?.properties || {};
+  const { lon, lat } = getFeatureCoords(feature);
+
+  const sv = lon != null && lat != null ? streetViewURL({ lon, lat }) : null;
+  const svHtml = sv
+    ? `<a class="text-blue-600 hover:text-blue-900 underline font-medium"
+        href="${sv}" target="_blank" rel="noopener">Open Street View</a>`
+    : "Street View: —";
+
+  if (kind === "top50") {
+    const aps = safe(p["Unique APS-Code"]);
+    const rank = safe(p["Risk Index Rank"]);
+    const county = safe(p["County"]);
+    const rteType = safe(p["Rte Type"]);
+    const roadNumber = safe(p["RoadNumber"]);
+    const mps = safe(p["MP's"]);
+    const scoreType = safe(p["Score Type"]);
+    const scoreLabel = scoreTypeLabel(scoreType);
+    const scoreColor = scoreTypeColor(scoreType);
+
+    const fieldScore =
+      p["Field Score"] == null || p["Field Score"] === ""
+        ? "—"
+        : Number(p["Field Score"]).toFixed(3);
+
+    const criticalityScore =
+      p["Criticality Score"] == null || p["Criticality Score"] === ""
+        ? "—"
+        : Number(p["Criticality Score"]).toFixed(3);
+
+    const riskIndex =
+      p["Risk Index"] == null || p["Risk Index"] === ""
+        ? "—"
+        : Number(p["Risk Index"]).toFixed(3);
+
+    return `
+      <h2 class="text-xl font-bold">
+        Incident ID: ${aps}<br>
+        Risk Index Rank: ${rank}
+      </h2>
+      <p>
+        Occurred in <strong>${county}</strong> County along <strong>${rteType}-${roadNumber}</strong><br>
+        <br><strong>Mile Points</strong>: ${mps} &nbsp;•&nbsp; ${svHtml}
+        <br><strong>Score Type</strong>: <span style="color:${scoreColor}; font-weight:700;">${scoreLabel}</span>
+        <br><strong>Field Score</strong>: ${fieldScore}
+        <br><strong>Criticality Score</strong>: ${criticalityScore}
+        <br><strong>Risk Index</strong>: ${riskIndex}
+      </p>
+    `;
+  }
+
+  if (kind === "top300") {
+    const aps = safe(p["Unique APS-Code"]);
+    const county = safe(p["County"]);
+    const scoreType = safe(p["Score Type"]);
+    const scoreLabel = scoreTypeLabel(scoreType);
+    const beginMP = safe(p["Begin MP"]);
+    const endMP = safe(p["End MP"]);
+    const ds =
+      p["Normalized DS Score"] == null || p["Normalized DS Score"] === ""
+        ? "—"
+        : Number(p["Normalized DS Score"]).toFixed(2);
+
+    return `
+      <h2 class="text-xl font-bold">
+        Incident ID: ${aps}
+      </h2>
+      <p>
+        <strong>${scoreLabel}</strong> in <strong>${county}</strong> County
+        <br><br>
+        <strong>Mile Points:</strong> ${beginMP} to ${endMP} &nbsp;•&nbsp; ${svHtml}
+        <br>
+        <strong>LS/RF Desktop Score:</strong> ${ds}
+      </p>
+    `;
+  }
+
+  const aps = safe(p["Unique APS-Code"]);
+  const county = safe(p["County"]);
+  const route = safe(p["Route"]);
+  const costVal = Number(p["Cost/Name"]);
+  const cost = isNaN(costVal)
+    ? "—"
+    : new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 0,
+      }).format(costVal);
+
+  const mp = safe(p["Mid MP"]);
+  const minMP = safe(p["Min MP"]);
+  const maxMP = safe(p["Max MP"]);
+  const length = safe(p["Total Distance"]);
+  const occ = p.Occurrences ?? p.occurrences ?? p["db_Weighted Occurrences"];
+  const pds =
+    p["Norm. Pre-Desktop Score"] == null || p["Norm. Pre-Desktop Score"] === ""
+      ? "—"
+      : Number(p["Norm. Pre-Desktop Score"]).toFixed(2);
+  const occStr = occ == null ? "—" : nf0.format(occ);
+  const aadt = p.AADT == null ? "—" : nf0.format(p.AADT);
+
+  return `
+    <h2 class="text-xl font-bold">Incident ID: ${aps}</h2>
+    <p>
+      Landslide in ${county} County, occurred along ${route}<br>
+      <br><strong>Number of Occurrences</strong>: ${occStr}
+      <br><strong>Cost</strong>: ${cost}
+      <br><strong>Norm. Pre-Desktop Score</strong>: ${pds}
+      <br><strong>AADT</strong>: ${aadt}
+      <br><strong>Total Length</strong>: ${length} miles
+      <br>&emsp;From Mile Point ${minMP} to ${maxMP}
+      <br><strong>Mid Mile Point</strong>: ${mp} &nbsp;•&nbsp; ${svHtml}
+    </p>
+  `;
+}
+
+function showPopup(feature, kind) {
+  const { coords } = getFeatureCoords(feature);
+
+  new maplibregl.Popup({ closeButton: true, offset: 10 })
+    .setLngLat(coords)
+    .setHTML(buildPopup(feature, kind))
+    .addTo(map);
+}
+
+function buildChooserButton(feature, kind, i) {
+  const p = feature?.properties || {};
+  const aps = safe(p["Unique APS-Code"]);
+  const scoreType = safe(p["Score Type"]);
+  const scoreLabel = scoreTypeLabel(scoreType);
+  const scoreColor = scoreTypeColor(scoreType);
+
+  if (kind === "top50") {
+    const rank = safe(p["Risk Index Rank"]);
+    return `
+      <button
+        type="button"
+        class="chooser-choice"
+        data-choice-index="${i}"
+        style="
+          display:block;
+          width:100%;
+          text-align:left;
+          padding:8px 10px;
+          margin:0 0 6px 0;
+          border:1px solid #d7d7d7;
+          border-radius:8px;
+          background:#fff;
+          cursor:pointer;
+        "
+      >
+        <strong>#${rank}</strong>
+        <span style="color:${scoreColor}; font-weight:700;">${scoreLabel}</span>
+        — ${aps}
+      </button>
+    `;
+  }
+
+  if (kind === "top300") {
+    const ds =
+      p["Normalized DS Score"] == null || p["Normalized DS Score"] === ""
+        ? "—"
+        : Number(p["Normalized DS Score"]).toFixed(2);
+
+    return `
+      <button
+        type="button"
+        class="chooser-choice"
+        data-choice-index="${i}"
+        style="
+          display:block;
+          width:100%;
+          text-align:left;
+          padding:8px 10px;
+          margin:0 0 6px 0;
+          border:1px solid #d7d7d7;
+          border-radius:8px;
+          background:#fff;
+          cursor:pointer;
+        "
+      >
+        <span style="color:${scoreColor}; font-weight:700;">${scoreLabel}</span>
+        — ${aps}
+        <br>
+        <span style="font-size:12px; color:#555;">Desktop Score: ${ds}</span>
+      </button>
+    `;
+  }
+
+  return "";
+}
+
+function showChooserPopup(lngLat, features, kind) {
+  const html = `
+    <div class="chooser-popup">
+      <div style="font-weight:700; margin-bottom:8px;">
+        ${features.length} records at this location
+      </div>
+      <div style="font-size:12px; color:#444; margin-bottom:8px;">
+        Select a record to view details.
+      </div>
+      <div class="chooser-list">
+        ${features.map((feature, i) => buildChooserButton(feature, kind, i)).join("")}
+      </div>
+    </div>
+  `;
+
+  const popup = new maplibregl.Popup({ closeButton: true, offset: 10 })
+    .setLngLat(lngLat)
+    .setHTML(html)
+    .addTo(map);
+
+  const popupEl = popup.getElement();
+  popupEl.querySelectorAll(".chooser-choice").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const i = Number(btn.dataset.choiceIndex);
+      const selectedFeature = features[i];
+      popup.remove();
+      showPopup(selectedFeature, kind);
+    });
+  });
+}
+
+// -----------------------------------------------------------------------------
+// HELP MODAL
+// -----------------------------------------------------------------------------
+
 function inputProfile() {
   const anyCoarse =
     window.matchMedia?.("(any-pointer: coarse)")?.matches || false;
@@ -193,16 +617,14 @@ function inputProfile() {
     /Mobi|Android/i.test(navigator.userAgent);
   return {
     mobileLikely: (anyCoarse && !anyHover) || uaMobile,
-    hybridLikely: anyCoarse && anyHover, // example: Surface + mouse
+    hybridLikely: anyCoarse && anyHover,
     desktopLikely: !anyCoarse && anyHover,
   };
 }
 
-const HELP_STORAGE_KEY = "d12_map_help_dismissed_v1";
-
 function buildHelpHTML() {
   const p = inputProfile();
-  // checks if the user is using a mouse and touchpad, returns hybrid help message
+
   if (p.hybridLikely) {
     return `
       <h3 class="title">How to use this map (Mouse & Touch)</h3>
@@ -214,7 +636,7 @@ function buildHelpHTML() {
       </ul>
     `;
   }
-  // checks if the user is on mobile, returns a mobile help message
+
   if (p.mobileLikely) {
     return `
       <h3 class="title">How to use this map (Mobile)</h3>
@@ -226,7 +648,7 @@ function buildHelpHTML() {
       </ul>
     `;
   }
-  // checks if the user is on desktop, returns a desktop help message
+
   return `
     <h3 class="title">How to use this map (Desktop)</h3>
     <ul class="list">
@@ -239,7 +661,7 @@ function buildHelpHTML() {
 }
 
 function showHelpModal({ force = false } = {}) {
-  if (!force && localStorage.getItem(HELP_STORAGE_KEY) === "1") return;
+  if (!force && localStorage.getItem(helpStorageKey) === "1") return;
 
   const backdrop = document.createElement("div");
   backdrop.className = "maphelp_backdrop";
@@ -264,7 +686,7 @@ function showHelpModal({ force = false } = {}) {
 
   const close = () => {
     const dontShow = modal.querySelector("#maphelp_dont_show")?.checked;
-    if (dontShow) localStorage.setItem(HELP_STORAGE_KEY, "1");
+    if (dontShow) localStorage.setItem(helpStorageKey, "1");
     backdrop.remove();
   };
 
@@ -305,250 +727,55 @@ class HelpControl {
   }
 }
 
-const num = (v) => (v == null || v === "" ? null : Number(v));
-const safe = (v) => (v == null || v === "" ? "—" : v);
-const nf0 = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+// -----------------------------------------------------------------------------
+// DATASET SWITCHING + EVENTS
+// -----------------------------------------------------------------------------
 
-// Builds a Street View URL from lon/lat
-function streetViewURL({ lon, lat }) {
-  return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
+function setMetric(metric) {
+  Object.values(datasets).forEach((cfg) => {
+    const visible = cfg.metric === metric ? "visible" : "none";
+
+    map.setLayoutProperty(cfg.shadow, "visibility", visible);
+    map.setLayoutProperty(cfg.layer, "visibility", visible);
+
+    if (cfg.labels) {
+      map.setLayoutProperty(cfg.labels, "visibility", visible);
+    }
+  });
 }
 
-const top50Key = new Map();
+function attachPopup(layerId, kind) {
+  map.on("mouseenter", layerId, () => {
+    map.getCanvas().style.cursor = "pointer";
+  });
 
-function getTop50Key(feature) {
-  const p = feature?.properties || {};
-  const coords = feature?.geometry?.coordinates || [];
-  const lon = num(p.Longitude ?? p.longitude ?? coords[0]);
-  const lat = num(p.Latitude ?? p.latitude ?? coords[1]);
+  map.on("mouseleave", layerId, () => {
+    map.getCanvas().style.cursor = "";
+  });
 
-  if (lon == null || lat == null || Number.isNaN(lon) || Number.isNaN(lat)) {
-    return "";
-  }
+  map.on("click", layerId, (e) => {
+    const feat = e.features?.[0];
+    if (!feat) return;
 
-  return `${Number(lon).toFixed(8)}|${Number(lat).toFixed(8)}`;
-}
+    const cfg = datasets[kind];
 
-function sortTop50Features(features) {
-  return [...features].sort((a, b) => {
-    const rankA = Number(a?.properties?.["Risk Index Rank"]);
-    const rankB = Number(b?.properties?.["Risk Index Rank"]);
+    if (cfg.chooser) {
+      const key = getFeatureKey(feat);
+      const group = groupedFeatures[kind]?.get(key) || [feat];
 
-    if (!Number.isNaN(rankA) && !Number.isNaN(rankB) && rankA !== rankB) {
-      return rankA - rankB;
+      if (group.length > 1) {
+        showChooserPopup(e.lngLat, group, kind);
+        return;
+      }
     }
 
-    const typeA = safe(a?.properties?.["Score Type"]);
-    const typeB = safe(b?.properties?.["Score Type"]);
-    if (typeA !== typeB) return typeA.localeCompare(typeB);
-
-    const apsA = safe(a?.properties?.["Unique APS-Code"]);
-    const apsB = safe(b?.properties?.["Unique APS-Code"]);
-    return apsA.localeCompare(apsB);
+    showPopup(feat, kind);
   });
 }
 
-function indexTop50(geojson) {
-  top50Key.clear();
-
-  (geojson.features || []).forEach((feature) => {
-    const key = getTop50Key(feature);
-    if (!key) return;
-
-    if (!top50Key.has(key)) {
-      top50Key.set(key, []);
-    }
-    top50Key.get(key).push(feature);
-  });
-
-  for (const [key, features] of top50Key.entries()) {
-    top50Key.set(key, sortTop50Features(features));
-  }
-}
-
-function buildTop50Popup(feature) {
-  const p = feature?.properties || {};
-  const coords = feature?.geometry?.coordinates || [];
-
-  const aps = safe(p["Unique APS-Code"]);
-  const rank = safe(p["Risk Index Rank"]);
-  const county = safe(p["County"]);
-  const rteType = safe(p["Rte Type"]);
-  const roadNumber = safe(p["RoadNumber"]);
-  const mps = safe(p["MP's"]);
-
-  const lon = num(p.Longitude ?? p.longitude ?? coords[0]);
-  const lat = num(p.Latitude ?? p.latitude ?? coords[1]);
-
-  const scoreType = safe(p["Score Type"]);
-  const scoreTypeLabel =
-    scoreType === "LS"
-      ? "Landslide"
-      : scoreType === "RF"
-        ? "Rockfall"
-        : scoreType;
-
-  const fieldScore =
-    p["Field Score"] == null || p["Field Score"] === ""
-      ? "—"
-      : Number(p["Field Score"]).toFixed(3);
-
-  const criticalityScore =
-    p["Criticality Score"] == null || p["Criticality Score"] === ""
-      ? "—"
-      : Number(p["Criticality Score"]).toFixed(3);
-
-  const riskIndex =
-    p["Risk Index"] == null || p["Risk Index"] === ""
-      ? "—"
-      : Number(p["Risk Index"]).toFixed(3);
-
-  const scoreColor =
-    scoreType === "LS" ? "#2C5AA0" : scoreType === "RF" ? "#C23B32" : "#444";
-
-  const sv = lon != null && lat != null ? streetViewURL({ lon, lat }) : null;
-
-  const svHtml = sv
-    ? `<a class="text-blue-600 hover:text-blue-900 underline font-medium"
-        href="${sv}" target="_blank" rel="noopener">Open Street View</a>`
-    : "Street View: —";
-
-  return `
-    <h2 class="text-xl font-bold">
-      Incident ID: ${aps}<br>
-      Risk Index Rank: ${rank}
-    </h2>
-    <p>
-      Occurred in <strong>${county}</strong> County along <strong>${rteType}-${roadNumber}</strong><br>
-      <br><strong>Mile Points</strong>: ${mps} &nbsp;•&nbsp; ${svHtml}
-      <br><strong>Score Type</strong>: <span style="color:${scoreColor}; font-weight:700;">${scoreTypeLabel}</span>
-      <br><strong>Field Score</strong>: ${fieldScore}
-      <br><strong>Criticality Score</strong>: ${criticalityScore}
-      <br><strong>Risk Index</strong>: ${riskIndex}
-    </p>
-  `;
-}
-
-function showTop50DetailPopup(feature) {
-  const p = feature?.properties || {};
-  const coords = feature?.geometry?.coordinates || [
-    num(p.Longitude),
-    num(p.Latitude),
-  ];
-
-  new maplibregl.Popup({ closeButton: true, offset: 10 })
-    .setLngLat(coords)
-    .setHTML(buildTop50Popup(feature))
-    .addTo(map);
-}
-
-function showTop50ChooserPopup(lngLat, features) {
-  const html = `
-    <div class="top50-chooser">
-      <div style="font-weight:700; margin-bottom:8px;">
-        ${features.length} records at this location
-      </div>
-      <div style="font-size:12px; color:#444; margin-bottom:8px;">
-        Select a record to view details.
-      </div>
-      <div class="top50-chooser-list">
-        ${features
-          .map((feature, i) => {
-            const p = feature?.properties || {};
-            const aps = safe(p["Unique APS-Code"]);
-            const rank = safe(p["Risk Index Rank"]);
-            const scoreType = safe(p["Score Type"]);
-            const scoreTypeLabel =
-              scoreType === "LS"
-                ? "Landslide"
-                : scoreType === "RF"
-                  ? "Rockfall"
-                  : scoreType;
-
-            const scoreColor =
-              scoreType === "LS"
-                ? "#2C5AA0"
-                : scoreType === "RF"
-                  ? "#C23B32"
-                  : "#444";
-
-            return `
-              <button
-                type="button"
-                class="top50-choice"
-                data-choice-index="${i}"
-                style="
-                  display:block;
-                  width:100%;
-                  text-align:left;
-                  padding:8px 10px;
-                  margin:0 0 6px 0;
-                  border:1px solid #d7d7d7;
-                  border-radius:8px;
-                  background:#fff;
-                  cursor:pointer;
-                "
-              >
-                <strong>#${rank}</strong>
-                <span style="color:${scoreColor}; font-weight:700;">${scoreTypeLabel}</span>
-                — ${aps}
-              </button>
-            `;
-          })
-          .join("")}
-      </div>
-    </div>
-  `;
-
-  const popup = new maplibregl.Popup({ closeButton: true, offset: 10 })
-    .setLngLat(lngLat)
-    .setHTML(html)
-    .addTo(map);
-
-  const popupEl = popup.getElement();
-  popupEl.querySelectorAll(".top50-choice").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const i = Number(btn.dataset.choiceIndex);
-      const selectedFeature = features[i];
-      popup.remove();
-      showTop50DetailPopup(selectedFeature);
-    });
-  });
-}
-
-function filterLabels(geojson) {
-  const byAPS = new Map();
-
-  (geojson.features || []).forEach((feature) => {
-    const p = feature.properties || {};
-    const aps = p["Unique APS-Code"];
-    const rank = Number(p["Risk Index Rank"]);
-
-    if (!aps) return;
-
-    if (!byAPS.has(aps)) {
-      byAPS.set(aps, feature);
-      return;
-    }
-
-    const existing = byAPS.get(aps);
-    const existingRank = Number(existing?.properties?.["Risk Index Rank"]);
-
-    // keep the better rank (smaller number) for labeling
-    if (
-      !Number.isNaN(rank) &&
-      !Number.isNaN(existingRank) &&
-      rank < existingRank
-    ) {
-      byAPS.set(aps, feature);
-    }
-  });
-
-  return {
-    type: "FeatureCollection",
-    features: [...byAPS.values()],
-  };
-}
+// -----------------------------------------------------------------------------
+// MAP LOAD
+// -----------------------------------------------------------------------------
 
 map.on("load", async () => {
   map.setPitch(55);
@@ -560,7 +787,6 @@ map.on("load", async () => {
     exaggeration: 2,
   });
 
-  // Add sky style to the map, giving an atmospheric effect
   map.setSky({
     "sky-color": "#61C2FEFF",
     "sky-horizon-blend": 0.5,
@@ -581,31 +807,36 @@ map.on("load", async () => {
     ],
   });
 
-  // Fetch landslides GeoJSON once so we can fit the map to its bounds
-  // Make sure data is in the "public" folder to be served correctly
-  // when it's built for production
-  // The "public" folder is the root of the web server
-  const slidesRes = await fetch("./data/landslides.geojson");
+  const slidesRes = await fetch(landslidesUrl);
   if (!slidesRes.ok) {
     throw new Error(`Failed to load landslides.geojson: ${slidesRes.status}`);
   }
   const slidesGeoJSON = await slidesRes.json();
 
-  const top50Res = await fetch("./data/top50-landslides.geojson");
+  const top50Res = await fetch(top50Url);
   if (!top50Res.ok) {
     throw new Error(
       `Failed to load top50-landslides.geojson: ${top50Res.status}`,
     );
   }
   const top50GeoJSON = await top50Res.json();
-  const top50Label = filterLabels(top50GeoJSON);
-  map.getSource("top50-labels").setData(top50Label);
-  indexTop50(top50GeoJSON);
 
-  // fitBounds to the slidesGeoJSON
+  const top300Res = await fetch(top300Url);
+  if (!top300Res.ok) {
+    throw new Error(`Failed to load top300 data: ${top300Res.status}`);
+  }
+  const top300GeoJSON = await top300Res.json();
+
+  const top50LabelSource = map.getSource("top50-labels");
+  if (top50LabelSource) {
+    top50LabelSource.setData(filterTop50Labels(top50GeoJSON));
+  }
+
+  indexFeatures(top50GeoJSON, "top50");
+  indexFeatures(top300GeoJSON, "top300");
+
   map.fitBounds(getGeoJSONBounds(slidesGeoJSON), { padding: 20, maxZoom: 12 });
 
-  // Create legend container if it doesn't exist
   let legend = document.querySelector(".legend");
   if (!legend) {
     legend = document.createElement("div");
@@ -619,184 +850,61 @@ map.on("load", async () => {
           Top 50 Risk Index
         </label>
 
+        <label style="display:block; margin-bottom:6px;">
+          <input type="radio" name="metric" value="top300">
+          Top 300 LS/RF Desktop Score
+        </label>
+
         <div class="legend_section_break">
           <span>Original Dataset</span>
         </div>
 
         <label style="display:block; margin-bottom:6px;">
           <input type="radio" name="metric" value="costpm">
-          Cost per Mile
+          Cost
         </label>
+
         <label style="display:block;">
           <input type="radio" name="metric" value="weighted">
           Weighted Occurrences
+        </label>
+
+        <label style="display:block; margin-bottom:6px;">
+          <input type="radio" name="metric" value="predesktop">
+          Norm. Pre-Desktop Score
         </label>
       </div>
     `;
     document.body.appendChild(legend);
   }
-  buildGraduatedLegend(map, "top50", { metric: "top50" });
 
-  // wire radios
+  buildGraduatedLegend(map, "top50");
+  setMetric("top50");
+
   legend.querySelectorAll('input[name="metric"]').forEach((input) => {
     input.addEventListener("change", (e) => {
       const metric = e.target.value;
-      setLandslideMetric(metric);
-
-      buildGraduatedLegend(
-        map,
-        metric === "top50"
-          ? "top50"
-          : metric === "costpm"
-            ? "landslides-costpm"
-            : "landslides-weightedocc",
-        { metric },
-      );
+      setMetric(metric);
+      buildGraduatedLegend(map, metric);
     });
   });
 
-  // metric: top50 Risk Index, "costpm" or "weighted"
-  const setLandslideMetric = function (metric) {
-    const showTop50 = metric === "top50";
-    const showCost = metric === "costpm";
-    const showWeighted = metric === "weighted";
+  showHelpModal();
 
-    map.setLayoutProperty(
-      "top50-shadow",
-      "visibility",
-      showTop50 ? "visible" : "none",
-    );
-    map.setLayoutProperty(
-      "top50",
-      "visibility",
-      showTop50 ? "visible" : "none",
-    );
+  attachPopup("top50", "top50");
+  attachPopup("top300", "top300");
+  attachPopup("landslides-costpm", "costpm");
+  attachPopup("landslides-weightedocc", "weighted");
+  attachPopup("landslides-pds", "predesktop");
+});
 
-    map.setLayoutProperty(
-      "landslides-costpm-shadow",
-      "visibility",
-      showCost ? "visible" : "none",
-    );
-    map.setLayoutProperty(
-      "landslides-costpm",
-      "visibility",
-      showCost ? "visible" : "none",
-    );
+// -----------------------------------------------------------------------------
+// CONTROLS
+// -----------------------------------------------------------------------------
 
-    map.setLayoutProperty(
-      "landslides-weightedocc-shadow",
-      "visibility",
-      showWeighted ? "visible" : "none",
-    );
-    map.setLayoutProperty(
-      "landslides-weightedocc",
-      "visibility",
-      showWeighted ? "visible" : "none",
-    );
-
-    map.setLayoutProperty(
-      "top50-rank-labels",
-      "visibility",
-      showTop50 ? "visible" : "none",
-    );
-  };
-
-  showHelpModal(); // shows the helper function window when the map loads
-
-  // attach to BOTH metric layers
-  attachLandslidePopup("landslides-costpm");
-  attachLandslidePopup("landslides-weightedocc");
-  attachLandslidePopup("top50");
-}); // end map.on("load") function
-
-// Attach popup handlers for a given layer id
-function attachLandslidePopup(layerId) {
-  // pointer cursor affordance
-  map.on(
-    "mouseenter",
-    layerId,
-    () => (map.getCanvas().style.cursor = "pointer"),
-  );
-  map.on("mouseleave", layerId, () => (map.getCanvas().style.cursor = ""));
-
-  map.on("click", layerId, (e) => {
-    const feat = e.features?.[0];
-    if (!feat) return;
-    const p = feat.properties || {};
-    const coords = feat.geometry?.coordinates || [e.lngLat.lng, e.lngLat.lat];
-
-    // ----------------------------
-    // TOP 50 POPUP LOGIC
-    // ----------------------------
-    if (layerId === "top50") {
-      const coordKey = getTop50Key(feat);
-      const sameLocationFeatures = top50Key.get(coordKey) || [feat];
-
-      if (sameLocationFeatures.length > 1) {
-        showTop50ChooserPopup(e.lngLat, sameLocationFeatures);
-        return;
-      }
-
-      showTop50DetailPopup(feat);
-      return;
-    }
-
-    // ----------------------------
-    // ORIGINAL LANDSLIDES POPUP LOGIC
-    // ----------------------------
-    const lon = num(p.X ?? p.x ?? coords[0]);
-    const lat = num(p.Y ?? p.y ?? coords[1]);
-
-    const id = safe(p["Unique APS-Code"]);
-    const county = safe(p.County);
-    const route = safe(p.Route);
-    const costVal = Number(p["Cost per Mile"]);
-    const cost = isNaN(costVal)
-      ? "—"
-      : new Intl.NumberFormat("en-US", {
-          style: "currency",
-          currency: "USD",
-          maximumFractionDigits: 0,
-        }).format(costVal);
-
-    const mp = safe(p["Mid MP"]);
-    const minMP = safe(p["Min MP"]);
-    const maxMP = safe(p["Max MP"]);
-    const l = safe(p["Total Distance"]);
-    const occ = p.Occurrences ?? p.occurrences ?? p["Weighted Occurrences"];
-    const occStr = occ == null ? "—" : nf0.format(occ);
-    const aadt = p.AADT == null ? "—" : nf0.format(p.AADT);
-
-    const sv = lon != null && lat != null ? streetViewURL({ lon, lat }) : null;
-
-    const svHtml = sv
-      ? `<a class="text-blue-600 hover:text-blue-900 underline font-medium"
-        href="${sv}" target="_blank" rel="noopener">Open Street View</a>`
-      : "Street View: —";
-
-    const html = `
-      <h2 class="text-xl font-bold">Incident ID: ${id}</h2>
-      <p>
-      Landslide in ${county} County, occurred along ${route}<br>
-      <br><strong>Number of Occurrences</strong>: ${occStr}
-      <br><strong>Cost per Mile</strong>: ${cost}
-      <br><strong>AADT</strong>: ${aadt}
-      <br><strong>Total Length</strong>: ${l} miles
-      <br>&emsp;From Mile Point ${minMP} to ${maxMP}
-      <br><strong>Mid Mile Point</strong>: ${mp} &nbsp;•&nbsp; ${svHtml}
-      </p>
-    `;
-
-    new maplibregl.Popup({ closeButton: true, offset: 10 })
-      .setLngLat(coords)
-      .setHTML(html)
-      .addTo(map);
-  });
-}
-
-// Add basic map controls
 map.addControl(new maplibregl.NavigationControl(), "top-right");
 map.addControl(new maplibregl.FullscreenControl());
+
 map.addControl(
   new maplibregl.ScaleControl({
     maxWidth: 80,
@@ -804,7 +912,6 @@ map.addControl(
   }),
 );
 
-// Add terrain control for 3D effect
 map.addControl(
   new maplibregl.TerrainControl({
     source: "terrainSource",
@@ -812,7 +919,6 @@ map.addControl(
   }),
 );
 
-// allow users to geolocate their position
 map.addControl(
   new maplibregl.GeolocateControl({
     positionOptions: {
@@ -828,16 +934,4 @@ map.addControl(
   "top-right",
 );
 
-map.addControl(new HelpControl(), "top-right"); // adds new helper control button
-
-// Event listeners to monitor map changes
-map.on("move", () => {
-  const center = map.getCenter();
-  // console.log(
-  //   `Longitude: ${center.lng.toFixed(4)} Latitude: ${center.lat.toFixed(4)}`
-  // );
-});
-
-map.on("zoomend", () => {
-  console.log("Zoom: ", map.getZoom().toFixed(2));
-});
+map.addControl(new HelpControl(), "top-right");
