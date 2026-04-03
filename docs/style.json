@@ -30,11 +30,15 @@
     },
     "landslides": {
       "type": "geojson",
-      "data": "./data/landslides.geojson"
+      "data": "./data/landslides-update.geojson"
     },
     "top50": {
       "type": "geojson",
       "data": "./data/top50-landslides.geojson"
+    },
+    "top300": {
+      "type": "geojson",
+      "data": "./data/top300-landslides.geojson"
     },
     "top50-labels": {
       "type": "geojson",
@@ -744,14 +748,14 @@
       "layout": { "visibility": "none" },
       "filter": [
         "all",
-        ["has", "Cost per Mile"],
-        [">", ["coalesce", ["get", "Cost per Mile"], 0], 0]
+        ["has", "Cost/Name"],
+        [">", ["coalesce", ["get", "Cost/Name"], 0], 0]
       ],
       "paint": {
         "circle-radius": [
           "interpolate",
           ["linear"],
-          ["coalesce", ["get", "Cost per Mile"], 0],
+          ["coalesce", ["get", "Cost/Name"], 0],
           500000,
           10,
           2000000,
@@ -774,25 +778,25 @@
       "layout": { "visibility": "none" },
       "filter": [
         "all",
-        ["has", "Cost per Mile"],
-        [">", ["coalesce", ["get", "Cost per Mile"], 0], 0]
+        ["has", "Cost/Name"],
+        [">", ["coalesce", ["get", "Cost/Name"], 0], 0]
       ],
       "paint": {
-        "circle-color": "#E4C64E",
+        "circle-color": "#4C9A5F",
         "circle-opacity": 0.9,
         "circle-stroke-color": "rgba(0,0,0,0.35)",
         "circle-stroke-width": 0.9,
         "circle-radius": [
           "interpolate",
           ["linear"],
-          ["coalesce", ["get", "Cost per Mile"], 0],
+          ["coalesce", ["get", "Cost/Name"], 0],
           500000,
           6,
-          2000000,
+          1000000,
           16,
-          5000000,
+          1500000,
           26,
-          22500000,
+          2000000,
           36
         ]
       }
@@ -805,14 +809,14 @@
       "layout": { "visibility": "none" },
       "filter": [
         "all",
-        ["has", "Weighted Occurrences"],
-        [">", ["coalesce", ["get", "Weighted Occurrences"], 0], 0]
+        ["has", "db_Weighted Occurrences"],
+        [">", ["coalesce", ["get", "db_Weighted Occurrences"], 0], 0]
       ],
       "paint": {
         "circle-radius": [
           "interpolate",
           ["linear"],
-          ["coalesce", ["get", "Weighted Occurrences"], 0],
+          ["coalesce", ["get", "db_Weighted Occurrences"], 0],
           6,
           12,
           12,
@@ -835,8 +839,8 @@
       "layout": { "visibility": "none" },
       "filter": [
         "all",
-        ["has", "Weighted Occurrences"],
-        [">", ["coalesce", ["get", "Weighted Occurrences"], 0], 0]
+        ["has", "db_Weighted Occurrences"],
+        [">", ["coalesce", ["get", "db_Weighted Occurrences"], 0], 0]
       ],
       "paint": {
         "circle-color": "#50a1fa",
@@ -846,7 +850,7 @@
         "circle-radius": [
           "interpolate",
           ["linear"],
-          ["coalesce", ["get", "Weighted Occurrences"], 0],
+          ["coalesce", ["get", "db_Weighted Occurrences"], 0],
           6,
           6,
           12,
@@ -855,6 +859,67 @@
           26,
           26,
           36
+        ]
+      }
+    },
+        {
+      "id": "landslides-pds-shadow",
+      "type": "circle",
+      "source": "landslides",
+      "minzoom": 5,
+      "layout": { "visibility": "none" },
+      "filter": [
+        "all",
+        ["has", "Norm. Pre-Desktop Score"],
+        [">", ["coalesce", ["get", "Norm. Pre-Desktop Score"], 0], 0]
+      ],
+      "paint": {
+        "circle-radius": [
+          "interpolate",
+          ["linear"],
+          ["coalesce", ["get", "Norm. Pre-Desktop Score"], 0],
+          0.23,
+          10,
+          0.37,
+          16,
+          0.53,
+          24,
+          0.90,
+          32
+        ],
+        "circle-color": "rgba(0, 0, 0, 1)",
+        "circle-blur": 2,
+        "circle-opacity": 0.5
+      }
+    },
+    {
+      "id": "landslides-pds",
+      "type": "circle",
+      "source": "landslides",
+      "minzoom": 5,
+      "layout": { "visibility": "none" },
+      "filter": [
+        "all",
+        ["has", "Norm. Pre-Desktop Score"],
+        [">", ["coalesce", ["get", "Norm. Pre-Desktop Score"], 0], 0]
+      ],
+      "paint": {
+        "circle-color": "#E4C64E",
+        "circle-opacity": 0.9,
+        "circle-stroke-color": "rgba(0,0,0,0.35)",
+        "circle-stroke-width": 0.9,
+        "circle-radius": [
+          "interpolate",
+          ["linear"],
+          ["coalesce", ["get", "Norm. Pre-Desktop Score"], 0],
+          0.23,
+          4,
+          0.37,
+          10,
+          0.53,
+          18,
+          0.90,
+          26
         ]
       }
     },
@@ -923,6 +988,75 @@
           0.36,
           26,
           0.47817561294080002,
+          36
+        ]
+      }
+    },
+    {
+      "id": "top300-shadow",
+      "type": "circle",
+      "source": "top300",
+      "minzoom": 7,
+      "layout": { "visibility": "none" },
+      "filter": [
+        "all",
+        ["has", "Normalized DS Score"],
+        [">", ["coalesce", ["get", "Normalized DS Score"], 0], 0]
+      ],
+      "paint": {
+        "circle-radius": [
+          "interpolate",
+          ["linear"],
+          ["coalesce", ["get", "Normalized DS Score"], 0],
+          0.02,
+          12,
+          0.30,
+          22,
+          0.60,
+          32,
+          0.89,
+          42
+        ],
+        "circle-color": "rgba(0, 0, 0, 1)",
+        "circle-blur": 1.5,
+        "circle-opacity": 0.45
+      }
+    },
+    {
+      "id": "top300",
+      "type": "circle",
+      "source": "top300",
+      "minzoom": 7,
+      "layout": { "visibility": "none" },
+      "filter": [
+        "all",
+        ["has", "Normalized DS Score"],
+        [">", ["coalesce", ["get", "Normalized DS Score"], 0], 0]
+      ],
+      "paint": {
+        "circle-color": [
+          "match",
+          ["get", "Score Type"],
+          "LS",
+          "#2C5AA0",
+          "RF",
+          "#C23B32",
+          "#666666"
+        ],
+        "circle-opacity": 1,
+        "circle-stroke-color": "rgba(0,0,0,0.35)",
+        "circle-stroke-width": 0.9,
+        "circle-radius": [
+          "interpolate",
+          ["linear"],
+          ["coalesce", ["get", "Normalized DS Score"], 0],
+          0.02,
+          6,
+          0.30,
+          16,
+          0.60,
+          26,
+          0.89,
           36
         ]
       }
